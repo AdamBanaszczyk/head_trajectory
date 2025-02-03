@@ -44,28 +44,33 @@ The following list represents the steps in the sequence required to achieve the 
      - script loads tcp and Unity pose data and calculates time offset between those trajectories by detecting peaks in specified axes and comparing timestamps
   
 2) `prepare_calibration_data/match_poses_by_time.py`
-      - same data is loaded but now the script creates .csv files required for hand-eye calibration
+      - the same data is loaded but now the script creates .csv files required for hand-eye calibration
   
 3) `HandEyeCalibration`
       - using _.csv_ files created in _2._ and time_offset calculated in _1._ solve hand-eye calibration for provided systems.  
 So for the provided example and data, we should run: `./trajectory_alignment ../data/experiments/quest2/hand_eye_calib_input_data/calib_tool.csv ../data/experiments/quest2/hand_eye_calib_input_data/calib_unity.csv --t_diff=-0.27`
   
-5) `evaluation/trajectory_TUM_match_by_tool_time.py`
+4) `evaluation/trajectory_TUM_match_by_tool_time.py`
       - read the experimental data and convert it into a unified coordinate system with synchronized timestamps in TUM format
   
-6) `evaluation/auto_remove_idle_and_brake.py`
+5) `evaluation/auto_remove_idle_and_brake.py`
       - remove TUM trajectory parts where the robot wasn't moving and where the final brake causing a sudden stop in head motion was detected, as it could alter the results
   
-7) calculate results (inside `data/experiments/linked_tum` run:)
+6) calculate results (inside `data/experiments/linked_tum` run:)
     - `evo_ape tum traj1_tool1_gt_cut.txt traj1_tool2_gt_cut.txt -va --plot --plot_mode xz --t_max_diff=0.11 --save_results traj1_cut/tool1_vs_tool2.zip`
     - `evo_ape tum traj1_tool1_gt_cut.txt traj1_quest2_to_tool1_cut.txt -va --plot --plot_mode xz --save_results traj1_cut/tool1_vs_quest_2.zip`
     - `evo_ape tum traj1_tool1_gt_cut.txt traj1_quest_pro_to_tool1_cut.txt -va --plot --plot_mode xz --save_results traj1_cut/tool1_vs_quest_pro.zip`  
       
     - `evo_res traj1_cut/*.zip -p`
 
+
+- We also provide the software used for pose data collection:
+  - `unity_tracking_app` - captures head and hand pose data within Unity on the Quest VR headsets
+  - `utility/tool_pose_publisher.py` - publishes UR5e TCP pose data, as used in our experiments
+
 ### Experiments data naming clarification
 In `data/experiments` there are subdirectories `quest2` and `quest_pro` matching studied headsets. For each system, i.e. unity and tcp, there are 3 trajectories:
-  - `calib` - initial run after mounting headset on the robot. We used it to gather data needed for _time_offset_ calculation and hand-eye calibration
+  - `calib` - initial run after mounting the headset on the robot. We used it to gather data needed for _time_offset_ calculation and hand-eye calibration
   - `traj1` - first run of real-world head trajectory reproduced by the robot
   - `traj2` - second run of real-world head trajectory reproduced by the robot  
 Those trajectories were run one after another, without any interference in a system so we can assume that transformations and time offset calculated for _calib_ are also correct for the following trajectories. This is why in steps _1-3_ we use calib data and in _5-7_ switch to _traj1/traj2_ with the same parameters.
